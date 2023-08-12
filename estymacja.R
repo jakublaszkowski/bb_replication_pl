@@ -4,20 +4,23 @@ library(tidyverse)
 library(readxl)
 library(car)
 
-# Load data ---------------------------------------------------------------
+# załadowanie danych ---------------------------------------------------------------
 
+# ładuje dane z pliku szeregi_czasowe.xlsx, na innych komputerach trzeba to zmieniać
 data_raw <- read_excel(path  = "szeregi_czasowe.xlsx",
            sheet = "szeregi_qq") %>%
   mutate(data = as.Date(data)) %>% 
-  # remove NA from time series
+  # wyczyszczam próbę z okresów, gdzie nie ma żadnej obserwacji.
   filter(!if_any(.cols = everything(),
                 .fns = is.na))
 
-# pre covid sample
+# odfiltrowuję dane, na próbę sprzed pandemii
 
 data_pre_covid <- data_raw %>% 
   filter(data < "2020-01-01") %>% 
-  # add lags
+  # dodaje zmienne z opóźnieniami 
+  # w kolumnach od 2 do 11 znajdują się zmienne używane dalej w modelu
+  # wprowadzam opóźnienia od 1 do 4
   mutate(across(.cols = 2:11,
                 .fns = ~lag(.,n=1L),
                 .names = "lag1_{.col}"),
@@ -47,9 +50,7 @@ gwr_1 <- lm(formula = gw ~
 
 summary(gwr_1)
 
-#' najlepiej wychodzi ta wersja
-#' najwazniejsze zmienne są istotne statystycznie 
-#'
+# to równanie wybrałem ostatecznie do symulacji
 
 gwr_2 <- lm(formula = gw ~
               lag1_gw + lag2_gw +
@@ -64,12 +65,13 @@ summary(gwr_2)
 
 gwr <- gwr_2
 
+# sprawdzane nałożenie restrykcji ma uzasadnienie
+# H0: prawdziwa jest przedstawiana w równaniu restrykcja
+# H1: nieprawdziwa jest przedstawiana w równaniu restrykcja
 car::linearHypothesis(gwr_2,"lag1_gw+lag2_gw=0")
 car::linearHypothesis(gwr_2,"lag1_v_u+lag2_v_u=0")
 car::linearHypothesis(gwr_2,"lag1_catch_up + lag2_catch_up=0")
 car::linearHypothesis(gwr_2,"lag1_cf1 + lag2_cf1=0")
-
-#' second best 
 
 gwr_3 <- lm(formula = gw ~
               lag(gw, n=1L) + lag(gw, n=2L) + lag(gw, n=3L) + 
@@ -96,7 +98,7 @@ summary(gwr_4)
 # Price equation ----------------------------------------------------------
 
 
-#' To wychodzi najlepiej pod względem istotności zmiennych
+# ta wersja wchodzi do równania z symulacją
 
 gpr_1 <- lm(
   formula = gp ~
@@ -143,8 +145,6 @@ gpr_3 <- lm(
 
 summary(gpr_3)
 
-
-
 gpr_4 <- lm(
   formula = gp ~
     lag(gp, n=1L) + lag(gp, n=2L) + lag(gp, n=3L) + lag(gp, n=4L) +
@@ -163,7 +163,7 @@ summary(gpr_4)
 # Short run inflation expectations ----------------------------------------
 
 
-#' na razie funkcjonuje najlepiej
+# ta wersja wchodzi do równania z symulacją
 
 cf1r_1 <- lm(
   formula = cf1 ~
@@ -222,15 +222,21 @@ cf10r_1 <- lm(
 
 summary(cf10r_1)
 
+# ta wersja wchodzi do symulacji
 
 cf10r_2 <- lm(
   formula = cf10 ~
-    lag(cf10, n=1L) + lag(cf10, n=2L) + 
-    gp + lag(gp, n=1L) + lag(gp, n=2L),
+    lag1_cf10 + lag2_cf10 + 
+    gp + lag1_gp + lag2_gp,
   data = data_pre_covid
 )
 
 summary(cf10r_2)
+
+cf10r <- cf10r_2
+
+car::linearHypothesis(cf10r_2, "lag1_cf10 + lag2_cf10=0")
+car::linearHypothesis(cf10r_2, "gp + lag1_gp + lag2_gp=0")
 
 
 cf10r_3 <- lm(
@@ -239,13 +245,6 @@ cf10r_3 <- lm(
     gp + lag1_gp + lag2_gp + lag3_gp,
   data = data_pre_covid
 )
-
-cf10r <- cf10r_3
-summary(cf10r_3)
-
-linearHypothesis(cf10r_3, "lag1_cf10 + lag2_cf10 + lag3_cf10=0")
-linearHypothesis(cf10r_3, "gp + lag1_gp + lag2_gp + lag3_gp=0")
-
 
 cf10r_4 <- lm(
   formula = cf10 ~

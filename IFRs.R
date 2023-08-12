@@ -1,19 +1,19 @@
+# ładuje oszacowania parametrów równań
 source("estymacja.R", echo = F)
+# usuwa niepotrzebne zmienne
 rm(list = setdiff(ls(), c("gpr", "gwr", "cf1r", "cf10r", "data_raw")))
 
+# ładuje komendę, która dokonuje symulacji
 source("simul_function.R", echo=F)
-
-
+# długość IRF na jaką dokonywana jest symulacja
 irf_length <- 10
-# this must be 3 or smaller
-# otherwise it will throw error in computing catch-up effect
+# długość opóźnień: musi być 4 lub większe inaczej wyrzuci błąd związany z wyliczaniem, catch-up effect
 m_lag <- 4
 
 # Pirce inflation ---------------------------------------------------------
-#' variable -> gp
-#' 
 
-# create empty box for variables
+# Stworzenie pojemnika na dane
+# długość każdego szeregu czasowego obejmuje `m_lag` opóźnień oraz `irf_length` na sam wykres 
 
 irf_box <- tibble(
   time_index = c(-m_lag:0, 1:irf_length),
@@ -33,17 +33,25 @@ irf_box <- tibble(
 
 ## shortage shock ------------------------
 
+# obliczam odchylenie standardowe szoku shortage
 shortage_sd <- data_raw %>% 
   filter(data < "2020-01-01") %>% 
   pull(shortage) %>% sd()
 
+# nadpisanie kopi
 irf_box_shortage <- irf_box 
+
+# wpisanie w okresie 0 szoku
 irf_box_shortage$shortage[m_lag+1] <- shortage_sd
 
+# wykonanie symulacji
 shortage_irf_raw <- simul_endo_values(irf_box_shortage, max_lag=m_lag, simul_length = irf_length)
 
+# oczyszczenie danych
 shortage_irf_clean <- shortage_irf_raw %>% 
+  # śledzę tylko ścieżkę zmiennych endogenicznych
   select(time_index, gp,gw) %>% 
+  # formatuje, do formatu long, który potem będzie strawny dla wygenerowania pliku
   pivot_longer(cols = 2:3, 
                names_to = "endo_var",
                values_to = "irf_val") %>% 
@@ -51,17 +59,25 @@ shortage_irf_clean <- shortage_irf_raw %>%
 
 ## energy price_shock ----------------------
 
+# obliczam odchylenie standardowe szoku cen energii
 grpe_sd <- data_raw %>% 
   filter(data < "2020-01-01") %>% 
   pull(grpe) %>% sd()
 
+# nadpisanie kopi
 irf_box_grpe <- irf_box 
+
+# wpisanie w okresie 0 szoku
 irf_box_grpe$grpe[m_lag+1] <- grpe_sd
 
+# wykonanie symulacji
 grpe_irf_raw <- simul_endo_values(irf_box_grpe, max_lag=m_lag, simul_length = irf_length)
 
+# oczyszczenie danych
 grpe_irf_clean <- grpe_irf_raw %>% 
+  # śledzę tylko ścieżkę zmiennych endogenicznych
   select(time_index, gp,gw) %>% 
+  # formatuje, do formatu long, który potem będzie strawny dla wygenerowania pliku
   pivot_longer(cols = 2:3, 
                names_to = "endo_var",
                values_to = "irf_val") %>% 
@@ -69,17 +85,25 @@ grpe_irf_clean <- grpe_irf_raw %>%
 
 ## food price shock ------------------
 
+# obliczam odchylenie standardowe szoku cen żywności
 grpf_sd <- data_raw %>% 
   filter(data < "2020-01-01") %>% 
   pull(grpf) %>% sd()
 
+# nadpisanie kopi
 irf_box_grpf <- irf_box 
+
+# wpisanie w okresie 0 szoku
 irf_box_grpf$grpf[m_lag+1] <- grpf_sd
 
+# wykonanie symulacji
 grpf_irf_raw <- simul_endo_values(irf_box_grpf, max_lag=m_lag, simul_length = irf_length)
 
-grpf_irf_clean <- grpf_irf_raw %>% 
+# oczyszczenie danych
+grpf_irf_clean <- grpf_irf_raw %>%
+  # śledzę tylko ścieżkę zmiennych endogenicznych
   select(time_index, gp,gw) %>% 
+  # formatuje, do formatu long, który potem będzie strawny dla wygenerowania pliku
   pivot_longer(cols = 2:3, 
                names_to = "endo_var",
                values_to = "irf_val") %>% 
@@ -88,12 +112,14 @@ grpf_irf_clean <- grpf_irf_raw %>%
 
 ## plot irf  ---------------------------------------------------------------
 
+# łącze dane
 rbind(
   grpe_irf_clean,
   grpf_irf_clean,
   shortage_irf_clean
 ) %>% 
   filter(time_index >=0) %>% 
+  # tworzę wykres z 3 szokami
   ggplot(aes(x=time_index, y=irf_val, color=irf_src)) +
   geom_line() +
   geom_point() +
