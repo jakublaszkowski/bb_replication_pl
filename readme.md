@@ -22,3 +22,6 @@ Plik generuje symulację przy użyciu funkcji z pliku simul_function oraz na pod
 
 Zakładane są wartości zmiennych egzogenicznych takie jak w danych, a wyznaczana jest ścieżka zmiennych endogenicznych. Wyjściem pliku jest wykres porównujący dane faktyczne i zasymulowane.
 
+## org_equations
+
+Replikacja estymacji z oryginalnej pracy. Sprawdzam czy zgadzają się sumy
