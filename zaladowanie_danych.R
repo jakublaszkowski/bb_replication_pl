@@ -113,4 +113,40 @@ tibble(
   data = data_vu$`Row Labels`,
   v_u = as.numeric(data_vu_adj)
 ) %>% 
+  write_csv2(., file = "dane/dane_vu_odsezonowane.csv")
+
+## odsezonowanie v ------
+
+data_v_adj <- ts(data_vu$v,
+   start=c(1995, 1),
+   frequency = 4) %>% 
+  seasonal::seas(x=.,
+                 # todo: nadpisać model arimy
+                 #arima.model="(0 1 0)(0 1 1)"
+                 ) %>% 
+  seasonal::final(.)
+
+tibble(
+  data = data_vu$`Row Labels`,
+  v = as.numeric(data_v_adj)
+) %>% 
   write_csv2(., file = "dane/dane_wakaty_odsezonowane.csv")
+
+
+## odsezonowanie u -----
+
+data_u_adj <- ts(data_vu$u,
+                 start=c(1995, 1),
+                 frequency = 4) %>% 
+  seasonal::seas(x=.,
+                 # todo: nadpisać model arimy
+                 #arima.model="(0 1 0)(0 1 1)"
+  ) %>% 
+  seasonal::final(.)
+
+tibble(
+  data = data_vu$`Row Labels`,
+  u = as.numeric(data_u_adj)
+) %>% 
+  write_csv2(., file = "dane/dane_bezrobocie_odsezonowane.csv")
+

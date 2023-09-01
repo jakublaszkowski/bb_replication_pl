@@ -23,9 +23,9 @@ simul_endo_values <- function(data_box, max_lag, simul_length){
       # wages 
       gwr$coefficients[['lag1_gw']] * data_box_to_return$gw[ind-1] +
       gwr$coefficients[['lag2_gw']] * data_box_to_return$gw[ind-2] +
-      # V/U
-      gwr$coefficients[['lag1_v_u']] * data_box_to_return$v_u[[ind-1]] +
-      gwr$coefficients[['lag2_v_u']] * data_box_to_return$v_u[[ind-2]] +
+      # V
+      gwr$coefficients[['lag1_v']] * data_box_to_return$v[[ind-1]] +
+      gwr$coefficients[['lag2_v']] * data_box_to_return$v[[ind-2]] +
       # catch_up
       gwr$coefficients[['lag1_catch_up']] * data_box_to_return$catch_up[[ind-1]] +
       gwr$coefficients[['lag2_catch_up']] * data_box_to_return$catch_up[[ind-2]] +
@@ -36,7 +36,7 @@ simul_endo_values <- function(data_box, max_lag, simul_length){
       gwr$coefficients[['lag1_gpty']] * data_box_to_return$gpty[[ind-1]] 
     
     # gp equation
-     
+    
     data_box_to_return$gp[ind] <-
       # prices
       gpr$coefficients[['lag1_gp']] * data_box_to_return$gp[ind-1] +
@@ -56,32 +56,17 @@ simul_endo_values <- function(data_box, max_lag, simul_length){
       gpr$coefficients[['lag1_gpty']] * data_box_to_return$gpty[[ind-1]] 
     
     # cf1 equation
-    
     data_box_to_return$cf1[ind] <-
       # cf
       cf1r$coefficients[['lag1_cf1']] * data_box_to_return$cf1[[ind-1]] +
-      # cf10
-      cf1r$coefficients[['cf10']] * data_box_to_return$cf10[[ind-1]] +
-      cf1r$coefficients[['lag1_cf10']] * data_box_to_return$cf10[[ind-1]] + 
-      # gp 
+      # gp
       cf1r$coefficients[['gp']] * data_box_to_return$gp[ind] +
-      cf1r$coefficients[['lag1_gp']] * data_box_to_return$gp[ind-1] 
-    
-    # cf10 equation
-    
-    data_box_to_return$cf10[ind] <-
-      # cf 10
-      cf10r$coefficients[['lag1_cf10']] * data_box_to_return$cf10[[ind-1]] + 
-      cf10r$coefficients[['lag2_cf10']] * data_box_to_return$cf10[[ind-2]] + 
-      # gp 
-      cf10r$coefficients[['gp']] * data_box_to_return$gp[ind] +
-      cf10r$coefficients[['lag1_gp']] * data_box_to_return$gp[ind-1] +
-      cf10r$coefficients[['lag2_gp']] * data_box_to_return$gp[ind-2] 
-     
-    # catch_up equation
-    data_box_to_return$catch_up[ind] <- sum(data_box_to_return$gp[(ind-3):ind])/4 - data_box_to_return$cf1[ind-4]
+      cf1r$coefficients[['lag1_gp']] * data_box_to_return$gp[ind-1] +
+      cf1r$coefficients[['I(gp^2)']] * (data_box_to_return$gp[ind])^2
+      
   }
   
   # zwraca dane z symulacji
   return(data_box_to_return)
 }
+

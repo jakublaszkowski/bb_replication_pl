@@ -15,16 +15,18 @@ data_to_simul_covid <- data_raw %>%
   filter(data > "2018-09-30") %>% 
   # dodaję wartości 0 dla zmiennych endogenicznych od 2020 roku
   # dzięki temu będą one nadpisywane według symulacji
-  mutate(across(.cols = c(gp, gw, cf1, cf10, catch_up),
+  mutate(across(.cols = c(gp, gw, cf1 
+                          #, cf10
+                          ),
                 .fns = ~ifelse(data > "2019-12-31",
                                yes = 0,
                                no = .)))
 
 # Wykonanie symulacji w danych
 
-data_simulated <-simul_endo_values(data_to_simul_covid,
-                  max_lag = m_lag,
-                  simul_length = 12)
+data_simulated <- simul_endo_values(data_to_simul_covid,
+                                    max_lag = m_lag,
+                                    simul_length = 13)
 
 
 
@@ -34,9 +36,9 @@ data_simulated <-simul_endo_values(data_to_simul_covid,
 # przeformatowanie danych do formatu long
 data_simulated_long <- data_simulated %>%
   # wybranie zmiennych endogenicznych
-  select(data, gp, gw, cf1, cf10) %>%
+  select(data, gp, gw, cf1) %>%
   # przeformatownie do formatu long
-  pivot_longer(cols = 2:5, 
+  pivot_longer(cols = 2:4, 
                names_to = "endo_value") %>% 
   mutate(type = "simulated")
 
@@ -44,9 +46,9 @@ data_simulated_long <- data_simulated %>%
 data_observed_covid <- data_raw %>%
   filter(data > "2019-01-01") %>% 
   # wybranie zmiennych
-  select(data, gp, gw, cf1, cf10) %>% 
+  select(data, gp, gw, cf1) %>% 
   # przeformatowanie do formatu long
-  pivot_longer(cols = 2:5, 
+  pivot_longer(cols = 2:4, 
                names_to = "endo_value") %>% 
   mutate(type = "observed")
 
@@ -59,4 +61,4 @@ rbind(
   ggplot(aes(x=data,y=value, color=type)) +
   geom_line(size=1.5) +
   facet_wrap(~endo_value, scales="free_y") +
-  labs(title = "Symulacja ze wszystkimi zmiennymi")
+  labs(title = "Symulacja z wakatami zamiast v_u")
