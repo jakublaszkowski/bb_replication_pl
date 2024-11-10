@@ -1,21 +1,21 @@
-# plik zawiera funckję, która dokonuje symulacji, użytej zarówno do scenariusza 
-# kontrfaktycznego jak i do generowania IRF. 
-# Aby uruchomić plik niezbędne jest wcześniejsze wczytanie zmiennych z estymacja.R
+# The file contains a function that performs a simulation, used both for the 
+# counterfactual scenario and for generating IRF.
+# To run the file, it is necessary to first load the variables from estymacja.R
 
 simul_endo_values <- function(data_box, max_lag, simul_length){
   
-  # nadpisuję zmienną do zwrotu
+  # overwrite the variable to return
   data_box_to_return <- data_box
   
-  # maksymalne opóźnienie musi być równe większe 4, ponieważ wymaga tego 
+  # maximum lag must be at least 4, as required by 
   # catch up
   if(max_lag<4){
     stop("max_lag must be at least 4 or larger")
   }
   # simul_length 
-  # - długość symulacji 
+  # - length of the simulation
   
-  # part that compute simulation of endogenous values
+  # part that computes the simulation of endogenous values
   for(ind in (max_lag+1):(simul_length+max_lag+1)){
     
     # gw equation
@@ -29,6 +29,8 @@ simul_endo_values <- function(data_box, max_lag, simul_length){
       # catch_up
       gwr$coefficients[['lag1_catch_up']] * data_box_to_return$catch_up[[ind-1]] +
       gwr$coefficients[['lag2_catch_up']] * data_box_to_return$catch_up[[ind-2]] +
+      # add binary
+      # gwr$coefficients[['lag1_catch_up_binary']] * data_box_to_return$catch_up_binary[[ind-1]] +
       # cf_1
       gwr$coefficients[['lag1_cf1']] * data_box_to_return$cf1[[ind-1]] +
       gwr$coefficients[['lag2_cf1']] * data_box_to_return$cf1[[ind-2]] +
@@ -63,10 +65,9 @@ simul_endo_values <- function(data_box, max_lag, simul_length){
       cf1r$coefficients[['gp']] * data_box_to_return$gp[ind] +
       cf1r$coefficients[['lag1_gp']] * data_box_to_return$gp[ind-1] +
       cf1r$coefficients[['I(gp^2)']] * (data_box_to_return$gp[ind])^2
-      
+    
   }
   
-  # zwraca dane z symulacji
+  # returns simulation data
   return(data_box_to_return)
 }
-

@@ -107,7 +107,7 @@ sum(coef(gwr_4_restr)[14:17])
 # Price equation ----------------------------------------------------------
 
 # w kodzie w stacie jest magpty, bez lagu -> i tak dodaję tutaj, mimo że w paperze zapisany jest, 
-# że jest bez lagu dodany
+# że jest z lagiem dodany
 
 gpr_4 <- lm(
   formula = gp ~

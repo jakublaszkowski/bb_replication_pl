@@ -1,64 +1,77 @@
-# ładuje oszacowania parametrów równań
-source("estymacja.R", echo = F)
-# usuwa niepotrzebne zmienne
+# loads parameter estimates for the equations
+source("estimate.R", echo = F)
+# removes unnecessary variables
 rm(list = setdiff(ls(), c("gpr", "gwr", "cf1r", "cf10r", "data_raw")))
 
-# ładuje komendę, która dokonuje symulacji
+# loads the function that performs the simulation
 source("simul_function.R", echo=F)
-# długość opóźnień: musi być 4 lub większe inaczej wyrzuci błąd związany z wyliczaniem, catch-up effect
+# lag length: must be 4 or larger; otherwise, it will throw an error related to calculating the catch-up effect
 m_lag <- 4
+# for how long data should be simulated
+selected_simulation_lag <- 14
 
-# Przygowanie danych ---------------------------------------------------------------
+# Data Preparation ---------------------------------------------------------------
 
 data_to_simul_covid <- data_raw %>% 
-  # wybieram dane od 2 kwartału 2019 roku 
-  filter(data > "2018-09-30") %>% 
-  # dodaję wartości 0 dla zmiennych endogenicznych od 2020 roku
-  # dzięki temu będą one nadpisywane według symulacji
+  # select data from the 2nd quarter of 2019 onward
+  filter(date > "2018-09-30") %>% 
+  # add 0 values for endogenous variables starting from 2020
+  # this allows them to be overwritten according to the simulation
   mutate(across(.cols = c(gp, gw, cf1 
                           #, cf10
-                          ),
-                .fns = ~ifelse(data > "2019-12-31",
-                               yes = 0,
-                               no = .)))
+  ),
+  .fns = ~ifelse(date > "2019-12-31",
+                 yes = 0,
+                 no = .)))
 
-# Wykonanie symulacji w danych
+# Run Simulation on Data
 
 data_simulated <- simul_endo_values(data_to_simul_covid,
                                     max_lag = m_lag,
-                                    simul_length = 13)
+                                    simul_length = selected_simulation_lag)
 
+# Create Plot -------------------------------------------------------------
 
-
-
-# Stworzenie wykresu -------------------------------------------------------------
-
-# przeformatowanie danych do formatu long
+# reformat data to long format
 data_simulated_long <- data_simulated %>%
-  # wybranie zmiennych endogenicznych
-  select(data, gp, gw, cf1) %>%
-  # przeformatownie do formatu long
+  # select endogenous variables
+  select(date, gp, gw, cf1) %>%
+  # reformat to long format
   pivot_longer(cols = 2:4, 
                names_to = "endo_value") %>% 
   mutate(type = "simulated")
 
-# wybranie danych obserwowanych, aby dokleić je do wykresu
+# select observed data to add to the plot
 data_observed_covid <- data_raw %>%
-  filter(data > "2019-01-01") %>% 
-  # wybranie zmiennych
-  select(data, gp, gw, cf1) %>% 
-  # przeformatowanie do formatu long
+  filter(date > "2019-01-01") %>% 
+  # select variables
+  select(date, gp, gw, cf1) %>% 
+  # reformat to long format
   pivot_longer(cols = 2:4, 
                names_to = "endo_value") %>% 
   mutate(type = "observed")
 
-# połączenie danych
+# combine data
 rbind(
   data_simulated_long,
   data_observed_covid
 ) %>% 
-  # stworzenie wykresu
-  ggplot(aes(x=data,y=value, color=type)) +
+  # create the plot
+  ggplot(aes(x=date, y=value, color=type)) +
   geom_line(size=1.5) +
   facet_wrap(~endo_value, scales="free_y") +
-  labs(title = "Symulacja z wakatami zamiast v_u")
+  labs(title = "Simulation with variable for vacancies")
+
+
+# Save Data --------------------------------------------------------
+
+rbind(
+  data_simulated_long,
+  data_observed_covid
+) %>% 
+  mutate(type = case_when(
+    type == "simulated" ~ "simulation",
+    type == "observed" ~ "observed data"
+  )) %>% 
+  write_csv2(file = "data_output/simul_data.csv")
+

@@ -1,27 +1,44 @@
-# Opis plików:
+# Imporatant informations
 
-## backcast_oczekiwania.R
+# Source Data files
 
-Plik wykonuje backcast oczekiwań długoterminowych na podstawie oczekiwań krótkoterminowych.
+In the case of .xlsx files the source and description of used data is given within the file, in metadata sheet
 
-## estymacja.R
 
-Plik zawiera polecenia, które oszacowują poszczególne równania. W tym celu pobierane są dane z pliku, w którym znajdują się dane, następnie wybierana jest interesująca próba. *Równania użyte później w symulacji są zapisywane w komentarzu po komendzie podsumowującej*. Dla każdego równania dokonano estymacji w czterech formach, z różną liczbą opóźnień, aby sprawdzić, która będzie najlepsza.
+# Files: 
+
+## 1. load_data.R
+
+This file is preparing data to be used in further 
+
+After using this script one must copy data from csv to excel file *time_series.xlsx* in *data_input* folder. The file is not provided due to confidentiality of expectations series.
+
+## 1. backcast_expectations.R
+
+This file performs a backcast of long-term expectations based on short-term expectations.
+
+## estimate.R
+
+This file contains commands that estimate individual equations. Data is retrieved from a file, and then a relevant sample is selected. *The equations later used in the simulation are saved in a comment after the summarizing command.* Each equation is estimated in four forms, with different numbers of lags, to determine the best option.
 
 ## simul_function.R
 
-Plik zawiera funkcję, która wykonuje symulację na podstawie danych wejściowych oraz oszacowań parametrów strukturalnych z pliku estymacja.R.
+This file contains a function that performs a simulation based on input data and structural parameter estimates from the *estimate.R* file.
 
 ## IRFs.R
 
-Plik generuje IRF przy użyciu funkcji z pliku simul_function oraz na podstawie oszacowań zmiennych z pliku estymacja. Wyjściem pliku jest wykres z IRF dla szoków cen energii, żywności oraz niedoborów. Wszystkie szoki wprowadzone są w wielkości 1 odchylenia standardowego wewnątrz próby. Wyjściem pliku jest również wykres funkcji reakcji.
+This file generates impulse response functions (IRFs) using the function from *simul_function.R* and based on variable estimates from the *estimate.R* file. The output is a chart with IRFs for energy price shocks, food prices, and shortages. All shocks are introduced at the level of 1 standard deviation within the sample. The output also includes a chart of the response functions.
 
 ## simulation
 
-Plik generuje symulację przy użyciu funkcji z pliku simul_function oraz na podstawie oszacowań zmiennych z pliku estymacja. Wyjściem pliku jest wykres z IRF.
+This file generates a simulation using the function from simul_function and based on variable estimates from the estymacja file. The output is a chart with IRFs.
 
-Zakładane są wartości zmiennych egzogenicznych takie jak w danych, a wyznaczana jest ścieżka zmiennych endogenicznych. Wyjściem pliku jest wykres porównujący dane faktyczne i zasymulowane.
+Assumptions are made for exogenous variable values as in the data, and the path of endogenous variables is determined. The output is a chart comparing actual and simulated data.
 
-## org_equations
+## org_equations.R
 
-Replikacja estymacji z oryginalnej pracy. Sprawdzam czy zgadzają się sumy
+Replication of estimations from the original study. Used to check if sums are consistent.
+
+## Variance_decomposition.R
+
+This file performs variance decomposition, based on *simul_function.R*. Variance decomposition is carried out by excluding individual variables and comparing the results from the simulation with and without each variable.

@@ -24,7 +24,7 @@ irf_box <- tibble(
   catch_up = vector(mode = 'numeric', length = irf_length + m_lag + 1),
   grpe = vector(mode = 'numeric', length = irf_length + m_lag + 1),
   grpf = vector(mode = 'numeric', length = irf_length + m_lag + 1),
-  v_u = vector(mode = 'numeric', length = irf_length + m_lag + 1),
+  v = vector(mode = 'numeric', length = irf_length + m_lag + 1),
   shortage = vector(mode = 'numeric', length = irf_length + m_lag + 1),
   gpty = vector(mode = 'numeric', length = irf_length + m_lag + 1)
 )
@@ -125,5 +125,17 @@ rbind(
   geom_point() +
   facet_wrap(~endo_var)
 
+
+# Zapisanie danych do excela ----------------------------------------------
+
+
+
+rbind(
+  grpe_irf_clean,
+  grpf_irf_clean,
+  shortage_irf_clean
+  ) %>%    
+  filter(time_index >=0) %>% 
+  write_csv2(file = "dane_output/irf_data.csv")
 
 
