@@ -122,3 +122,4 @@ rbind(decomposition_long,
     TRUE ~ exogenous
   )) %>% 
   write_csv2(file = "data_output/var_decomp_data.csv")
+
