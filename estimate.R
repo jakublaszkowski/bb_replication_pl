@@ -12,7 +12,7 @@ data_raw <- read_excel(path  = "time_series.xlsx",
                        sheet = "series_qq") %>%
   mutate(date = as.Date(date)) %>% 
   # Filter series where there are no observations
-  filter(date >= "2002-04-01" & date <= "2023-04-01")
+  filter(date >= "2002-04-01" & date <= "2024-04-01")
 
 # filter data for pre-pandemic 
 

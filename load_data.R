@@ -107,7 +107,7 @@ tibble(
 # VU seria ----------------------------------------------------------------
 
 data_vu <- read_excel(
-  path = "dane/wakaty.xlsx",
+  path = "data_input/wakaty.xlsx",
   sheet= "qtr_raw"
   )
 
@@ -122,9 +122,9 @@ tibble(
   data = data_vu$`Row Labels`,
   v_u = as.numeric(data_vu_adj)
 ) %>% 
-  write_csv2(., file = "dane/dane_vu_odsezonowane.csv")
+  write_csv2(., file = "data_input/data_vu_seasadj.csv")
 
-## odsezonowanie v ------
+## seasonal adjustment v ------
 
 data_v_adj <- ts(data_vu$v,
    start=c(1995, 1),
@@ -138,10 +138,10 @@ tibble(
   data = data_vu$`Row Labels`,
   v = as.numeric(data_v_adj)
 ) %>% 
-  write_csv2(., file = "dane/dane_wakaty_odsezonowane.csv")
+  write_csv2(., file = "data_input/vacancy_seasadj.csv")
 
 
-## odsezonowanie u -----
+## seasonal adjustment u -----
 
 data_u_adj <- ts(data_vu$u,
                  start=c(1995, 1),
@@ -155,8 +155,7 @@ tibble(
   data = data_vu$`Row Labels`,
   u = as.numeric(data_u_adj)
 ) %>% 
-  write_csv2(., file = "dane/dane_bezrobocie_odsezonowane.csv")
-
+  write_csv2(., file = "data_input/unemployment_seasadj.csv")
 
 # Employment data -----------------------------------------------------
 

@@ -8,7 +8,7 @@ source("simul_function.R", echo=F)
 # lag length: must be 4 or larger; otherwise, it will throw an error related to calculating the catch-up effect
 m_lag <- 4
 # for how long data should be simulated
-selected_simulation_lag <- 14
+lenghth_simul <- 18
 
 # Data Preparation ---------------------------------------------------------------
 
@@ -28,7 +28,7 @@ data_to_simul_covid <- data_raw %>%
 
 data_simulated <- simul_endo_values(data_to_simul_covid,
                                     max_lag = m_lag,
-                                    simul_length = selected_simulation_lag)
+                                    simul_length = lenghth_simul)
 
 # Create Plot -------------------------------------------------------------
 
@@ -62,6 +62,8 @@ rbind(
   facet_wrap(~endo_value, scales="free_y") +
   labs(title = "Simulation with variable for vacancies")
 
+ggsave(filename = "simulation.png", path = "charts", device = "png",
+       width = 1500, height = 800, units = "px", dpi = 150)
 
 # Save Data --------------------------------------------------------
 
