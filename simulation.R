@@ -55,12 +55,39 @@ data_observed_covid <- data_raw %>%
 rbind(
   data_simulated_long,
   data_observed_covid
-) %>% 
+) %>%
+  # make to annualised data
+  mutate(value = (value/100 + 1)^4 - 1,
+         endo_value = case_when(
+           endo_value == "gp" ~ "Wzrost cen",
+           endo_value == "gw" ~ "Wzrost wynagrodzeń",
+           endo_value == "cf1" ~ "Roczne oczekiwania inflacyjne"
+         ),
+         type = case_when(
+           type == "simulated" ~ "Symulacja",
+           type == "observed"  ~ "Dane obserwowane"
+         )) %>% 
   # create the plot
   ggplot(aes(x=date, y=value, color=type)) +
   geom_line(size=1.5) +
   facet_wrap(~endo_value, scales="free_y") +
-  labs(title = "Simulation with variable for vacancies")
+  scale_y_continuous(labels = scales::percent_format()) +
+  scale_color_manual(values = c("#B2182B", "#67A9CF")) +
+  labs(title = "Wyniki symulacji kontra dane obserwowane",
+       y = "Dynamika r/r", x = NULL, 
+       caption = "Roczna dynamika została otrzymana przez zannualizowaie kwartalnych dynamik.\nObliczenia zostały wykonane na danych odsezonowanych",
+       color = NULL) +
+  theme_bw() +
+  theme(
+    strip.text = element_text(color = "white"),
+    strip.background = element_rect(fill = "#00695F"),
+    axis.text = element_text(color = "black"),
+    plot.title.position = "plot", 
+    plot.caption.position = "plot"
+  ) +
+  theme(
+    legend.position = "bottom"
+  )
 
 ggsave(filename = "simulation.png", path = "charts", device = "png",
        width = 1500, height = 800, units = "px", dpi = 150)
@@ -70,10 +97,17 @@ ggsave(filename = "simulation.png", path = "charts", device = "png",
 rbind(
   data_simulated_long,
   data_observed_covid
-) %>% 
-  mutate(type = case_when(
-    type == "simulated" ~ "simulation",
-    type == "observed" ~ "observed data"
-  )) %>% 
+) %>%
+  # make to annualised data
+  mutate(value = (value/100 + 1)^4 - 1,
+         endo_value = case_when(
+           endo_value == "gp" ~ "Wzrost cen",
+           endo_value == "gw" ~ "Wzrost wynagrodzeń",
+           endo_value == "cf1" ~ "Roczne oczekiwania inflacyjne"
+         ),
+         type = case_when(
+           type == "simulated" ~ "Symulacja",
+           type == "observed"  ~ "Dane obserwowane"
+         )) %>% 
   write_csv2(file = "data_output/simul_data.csv")
 

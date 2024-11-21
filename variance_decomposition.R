@@ -1,5 +1,5 @@
 # Load the simulation file
-source("simulation.R", echo = F)
+source("simulation.R", echo = F, encoding = "UTF8")
 
 placeholder_gwr <- gwr$coefficients
 placeholder_gpr <- gpr$coefficients
@@ -94,20 +94,112 @@ decomposition_long <- bind_cols(simulated_gw_gp, impact_v, impact_chatch_up, imp
 
 simulated_gw_gp_long <- simulated_gw_gp %>% 
   filter(date >= "2020-01-01") %>% 
-  pivot_longer(cols = 2:3, names_to = "variable")
+  pivot_longer(cols = 2:3, names_to = "variable") 
 
 # Chart -----------------------
 
-decomposition_long %>% 
+simulated_gw_gp_long_to_chart <- simulated_gw_gp_long %>% 
+  mutate(value = (value/100 + 1)^4 - 1,
+         variable = case_when(
+           variable == "gp" ~ "Wzrost cen",
+           variable == "gw" ~ "Wzrost wynagrodzeń"
+         ))
+
+targets_data <- simulated_gw_gp_long_to_chart %>% 
+  mutate(value = case_when(
+    variable == "Wzrost cen" ~ 0.025,
+    variable == "Wzrost wynagrodzeń" ~ 0.055,
+  ))
+
+decomposition_long_to_chart <-  decomposition_long %>% 
+  mutate(value = (value/100 + 1)^4 - 1,
+         exogenous = case_when(
+                      exogenous == "catch_up" ~ "nadrabianie oczekiwań",
+                      exogenous == "v" ~ "wakaty",
+                      exogenous == "grpe" ~ "ceny energii",
+                      exogenous == "grpf" ~ "ceny żywności",
+                      exogenous == "shortage" ~ "niedobory",
+                      exogenous == "initial" ~ "warunki początkowe + TFR",
+                      TRUE ~ exogenous
+                      ),
+         variable = case_when(
+           variable == "gp" ~ "Wzrost cen",
+           variable == "gw" ~ "Wzrost wynagrodzeń"
+         ) 
+         ) 
+  
+decomposition_long_to_chart$exogenous <- factor(
+  x = decomposition_long_to_chart$exogenous,
+  levels = c("ceny energii", "ceny żywności", 
+             "niedobory", "nadrabianie oczekiwań", 
+             "wakaty", "warunki początkowe + TFR"))
+
+decomposition_long_to_chart %>% 
   ggplot(aes(x=date, y=value)) +
   geom_col(aes(fill=exogenous)) +
-  geom_line(data = simulated_gw_gp_long, size=2) +
-  scale_fill_brewer(palette = "Set1") +
+  #geom_line(data = simulated_gw_gp_long_to_chart, size=1, color = 'black') +
+  geom_line(data = targets_data, size = 1, linetype = 'dashed', color = 'black') +
+  scale_fill_brewer(palette = "RdBu") +
   facet_wrap(~variable, ncol=1) +
-  theme_bw()
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_bw() +
+  theme(
+    strip.text = element_text(color = "white"),
+    strip.background = element_rect(fill = "#00695F"),
+    axis.text = element_text(color = "black"),
+    plot.title.position = "plot", 
+    plot.caption.position = "plot"
+  ) +
+  labs(
+    title = "Dekompozycja źródeł wariancji w symulowanych cenach energii i żywności", 
+    y = "Dynamika r/r", x = NULL, 
+    caption = "Roczna dynamika została otrzymana przez zannualizowaie kwartalnych dynamik.\nObliczenia zostały wykonane na danych odsezonowanych\nPrzerywanymi liniami oznaczono cel inflacyjny oraz cel wzrostu wynagrodzeń",
+    fill = "Egzogeniczne źródła zmian:"
+  )
 
 ggsave(filename = "var_decomp.png", path = "charts", device = "png",
        width = 1500, height = 800, units = "px", dpi = 150)
+
+
+# Create chart with each variable -----------------------------------------
+
+## Get colors 
+colors_palette <- RColorBrewer::brewer.pal(n=6, name = "RdBu")
+
+decomposition_long_to_chart$exogenous %>% unique
+
+list_exogenous <- c("ceny energii", "ceny żywności", 
+                    "niedobory", "nadrabianie oczekiwań", 
+                    "wakaty", "warunki początkowe + TFR") 
+
+for(i in 1:6){
+  # filter data
+  decomposition_long_to_chart %>% 
+    filter(exogenous %in% list_exogenous[1:i]) %>% 
+    ggplot(aes(x=date, y=value)) +
+    geom_col(aes(fill=exogenous)) +
+    scale_fill_manual(values = colors_palette[1:i]) +
+    facet_wrap(~variable, ncol=1) +
+    scale_y_continuous(labels = scales::percent_format()) +
+    theme_bw() +
+    theme(
+      strip.text = element_text(color = "white"),
+      strip.background = element_rect(fill = "#00695F"),
+      axis.text = element_text(color = "black"),
+      plot.title.position = "plot", 
+      plot.caption.position = "plot"
+    ) +
+    labs(
+      title = "Dekompozycja źródeł wariancji w symulowanych cenach energii i żywności", 
+      y = "Dynamika r/r", x = NULL, 
+      caption = "Roczna dynamika została otrzymana przez zannualizowaie kwartalnych dynamik.\nObliczenia zostały wykonane na danych odsezonowanych",
+      fill = "Egzogeniczne źródła zmian:"
+    )
+  
+  ggsave(filename = paste0("var_decomp_no",i,".png"), path = "charts/var_decomp", device = "png",
+         width = 1500, height = 800, units = "px", dpi = 150)
+}
+
 
 # Save data -----------------------------------------------------------------------
 
