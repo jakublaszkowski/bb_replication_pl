@@ -79,10 +79,15 @@ rbind(
        color = NULL) +
   theme_bw() +
   theme(
-    strip.text = element_text(color = "white"),
+    strip.text = element_text(color = "white", size = 7),
     strip.background = element_rect(fill = "#00695F"),
-    axis.text = element_text(color = "black"),
+    axis.text = element_text(color = "black", size = 6),
+    axis.title = element_text(color = "black", size = 7),
+    legend.text = element_text(size = 7),
+    legend.title = element_text(size = 8),
+    plot.title = element_text(size = 9),
     plot.title.position = "plot", 
+    plot.caption = element_text(size = 7, color = "black"),
     plot.caption.position = "plot"
   ) +
   theme(
@@ -90,7 +95,7 @@ rbind(
   )
 
 ggsave(filename = "simulation.png", path = "charts", device = "png",
-       width = 1500, height = 800, units = "px", dpi = 150)
+       width = 14*118, height = 7*118, units = "px", dpi = 300)
 
 # Save Data --------------------------------------------------------
 

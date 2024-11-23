@@ -119,7 +119,7 @@ decomposition_long_to_chart <-  decomposition_long %>%
                       exogenous == "grpe" ~ "ceny energii",
                       exogenous == "grpf" ~ "ceny żywności",
                       exogenous == "shortage" ~ "niedobory",
-                      exogenous == "initial" ~ "warunki początkowe + TFR",
+                      exogenous == "initial" ~ "warunki początkowe",
                       TRUE ~ exogenous
                       ),
          variable = case_when(
@@ -132,33 +132,45 @@ decomposition_long_to_chart$exogenous <- factor(
   x = decomposition_long_to_chart$exogenous,
   levels = c("ceny energii", "ceny żywności", 
              "niedobory", "nadrabianie oczekiwań", 
-             "wakaty", "warunki początkowe + TFR"))
+             "wakaty", "warunki początkowe"))
 
-decomposition_long_to_chart %>% 
-  ggplot(aes(x=date, y=value)) +
-  geom_col(aes(fill=exogenous)) +
-  #geom_line(data = simulated_gw_gp_long_to_chart, size=1, color = 'black') +
-  geom_line(data = targets_data, size = 1, linetype = 'dashed', color = 'black') +
-  scale_fill_brewer(palette = "RdBu") +
-  facet_wrap(~variable, ncol=1) +
-  scale_y_continuous(labels = scales::percent_format()) +
-  theme_bw() +
-  theme(
-    strip.text = element_text(color = "white"),
-    strip.background = element_rect(fill = "#00695F"),
-    axis.text = element_text(color = "black"),
-    plot.title.position = "plot", 
-    plot.caption.position = "plot"
-  ) +
-  labs(
-    title = "Dekompozycja źródeł wariancji w symulowanych cenach energii i żywności", 
-    y = "Dynamika r/r", x = NULL, 
-    caption = "Roczna dynamika została otrzymana przez zannualizowaie kwartalnych dynamik.\nObliczenia zostały wykonane na danych odsezonowanych\nPrzerywanymi liniami oznaczono cel inflacyjny oraz cel wzrostu wynagrodzeń",
-    fill = "Egzogeniczne źródła zmian:"
-  )
+for(var_ch in c("cen", "wynagrodzeń")){
+  
+  targes_data_to_chart <- filter(targets_data ,str_detect(variable, var_ch))
+  
+  decomposition_long_to_chart %>% 
+    filter(str_detect(variable, var_ch)) %>% 
+    ggplot(aes(x=date, y=value)) +
+    geom_col(aes(fill=exogenous)) +
+    #geom_line(data = simulated_gw_gp_long_to_chart, size=1, color = 'black') +
+    geom_line(data = targes_data_to_chart, size = 1, linetype = 'dashed', color = 'black') +
+    scale_fill_brewer(palette = "RdBu") +
+    facet_wrap(~variable, ncol=1) +
+    scale_y_continuous(labels = scales::percent_format()) +
+    theme_bw() +
+    theme(
+      strip.text = element_text(color = "white", size = 8),
+      strip.background = element_rect(fill = "#00695F"),
+      axis.text = element_text(color = "black", size = 6),
+      axis.title = element_text(color = "black", size = 7),
+      legend.text = element_text(size = 7),
+      legend.title = element_text(size = 8),
+      plot.title = element_text(size = 9),
+      plot.title.position = "plot", 
+      plot.caption = element_text(size = 7, color = "black"),
+      plot.caption.position = "plot"
+    ) +
+    labs(
+      title = "Dekompozycja źródeł wariancji w symulowanych cenach energii i żywności", 
+      y = "Dynamika r/r", x = NULL, 
+      caption = "Roczna dynamika została otrzymana przez zannualizowaie kwartalnych dynamik.\nObliczenia zostały wykonane na danych odsezonowanych\nPrzerywanymi liniami oznaczono cel inflacyjny oraz cel wzrostu wynagrodzeń",
+      fill = "Egzogeniczne źródła zmian:"
+    )
+  
+  ggsave(filename = paste0("var_decomp_", var_ch ,".png"), path = "charts", device = "png",
+         width = 14*118, height = 7*118, units = "px", dpi = 300)
+}
 
-ggsave(filename = "var_decomp.png", path = "charts", device = "png",
-       width = 1500, height = 800, units = "px", dpi = 150)
 
 
 # Create chart with each variable -----------------------------------------
@@ -170,25 +182,35 @@ decomposition_long_to_chart$exogenous %>% unique
 
 list_exogenous <- c("ceny energii", "ceny żywności", 
                     "niedobory", "nadrabianie oczekiwań", 
-                    "wakaty", "warunki początkowe + TFR") 
+                    "wakaty", "warunki początkowe") 
 
 for(i in 1:6){
+  for(var_ch in c("cen", "wynagrodzeń")){
   # filter data
   decomposition_long_to_chart %>% 
+    filter(str_detect(variable, var_ch)) %>% 
     filter(exogenous %in% list_exogenous[1:i]) %>% 
     ggplot(aes(x=date, y=value)) +
     geom_col(aes(fill=exogenous)) +
     scale_fill_manual(values = colors_palette[1:i]) +
     facet_wrap(~variable, ncol=1) +
-    scale_y_continuous(labels = scales::percent_format()) +
+    scale_y_continuous(labels = scales::percent_format(), 
+                       breaks = seq(-0.05, 0.15, 0.05),
+                       limits = c(-0.05, 0.175),
+                       expand = expansion(0)) +
     theme_bw() +
-    theme(
-      strip.text = element_text(color = "white"),
-      strip.background = element_rect(fill = "#00695F"),
-      axis.text = element_text(color = "black"),
-      plot.title.position = "plot", 
-      plot.caption.position = "plot"
-    ) +
+      theme(
+        strip.text = element_text(color = "white", size = 8),
+        strip.background = element_rect(fill = "#00695F"),
+        axis.text = element_text(color = "black", size = 6),
+        axis.title = element_text(color = "black", size = 7),
+        legend.text = element_text(size = 7),
+        legend.title = element_text(size = 8),
+        plot.title = element_text(size = 9),
+        plot.title.position = "plot", 
+        plot.caption = element_text(size = 7, color = "black"),
+        plot.caption.position = "plot"
+      ) +
     labs(
       title = "Dekompozycja źródeł wariancji w symulowanych cenach energii i żywności", 
       y = "Dynamika r/r", x = NULL, 
@@ -196,8 +218,9 @@ for(i in 1:6){
       fill = "Egzogeniczne źródła zmian:"
     )
   
-  ggsave(filename = paste0("var_decomp_no",i,".png"), path = "charts/var_decomp", device = "png",
-         width = 1500, height = 800, units = "px", dpi = 150)
+  ggsave(filename = paste0("var_decomp_no",i,".png"), path = paste0("charts/var_decomp_", var_ch), device = "png",
+         width = 14*118, height = 7*118, units = "px", dpi = 300)
+  }
 }
 
 
@@ -215,3 +238,4 @@ rbind(decomposition_long,
   )) %>% 
   write_csv2(file = "data_output/var_decomp_data.csv")
 
+print("Done")
