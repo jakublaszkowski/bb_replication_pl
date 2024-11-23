@@ -73,9 +73,10 @@ rbind(
   facet_wrap(~endo_value, scales="free_y") +
   scale_y_continuous(labels = scales::percent_format()) +
   scale_color_manual(values = c("#B2182B", "#67A9CF")) +
-  labs(title = "Wyniki symulacji kontra dane obserwowane",
+  labs(
+    #title = "Wyniki symulacji kontra dane obserwowane",
        y = "Dynamika r/r", x = NULL, 
-       caption = "Roczna dynamika została otrzymana przez zannualizowaie kwartalnych dynamik.\nObliczenia zostały wykonane na danych odsezonowanych",
+       #caption = "Roczna dynamika została otrzymana przez zannualizowaie kwartalnych dynamik.\nObliczenia zostały wykonane na danych odsezonowanych",
        color = NULL) +
   theme_bw() +
   theme(

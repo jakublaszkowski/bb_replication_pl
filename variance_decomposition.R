@@ -114,11 +114,11 @@ targets_data <- simulated_gw_gp_long_to_chart %>%
 decomposition_long_to_chart <-  decomposition_long %>% 
   mutate(value = (value/100 + 1)^4 - 1,
          exogenous = case_when(
-                      exogenous == "catch_up" ~ "nadrabianie oczekiwań",
-                      exogenous == "v" ~ "wakaty",
+                      exogenous == "catch_up" ~ "przeszła inflacja",
+                      exogenous == "v" ~ "popyt na pracowników",
                       exogenous == "grpe" ~ "ceny energii",
                       exogenous == "grpf" ~ "ceny żywności",
-                      exogenous == "shortage" ~ "niedobory",
+                      exogenous == "shortage" ~ "zatory w globalnych łańcuchach wartości",
                       exogenous == "initial" ~ "warunki początkowe",
                       TRUE ~ exogenous
                       ),
@@ -128,11 +128,15 @@ decomposition_long_to_chart <-  decomposition_long %>%
          ) 
          ) 
   
+list_exogenous <- c("ceny energii", "ceny żywności", 
+                    "zatory w globalnych łańcuchach wartości",
+                    "przeszła inflacja",  "popyt na pracowników", "warunki początkowe") 
+
 decomposition_long_to_chart$exogenous <- factor(
   x = decomposition_long_to_chart$exogenous,
-  levels = c("ceny energii", "ceny żywności", 
-             "niedobory", "nadrabianie oczekiwań", 
-             "wakaty", "warunki początkowe"))
+  levels = c("warunki początkowe", "popyt na pracowników", "przeszła inflacja", 
+             "zatory w globalnych łańcuchach wartości",
+              "ceny żywności", "ceny energii"))
 
 for(var_ch in c("cen", "wynagrodzeń")){
   
@@ -147,6 +151,7 @@ for(var_ch in c("cen", "wynagrodzeń")){
     scale_fill_brewer(palette = "RdBu") +
     facet_wrap(~variable, ncol=1) +
     scale_y_continuous(labels = scales::percent_format()) +
+    guides(fill=guide_legend(nrow=2,byrow=TRUE)) +
     theme_bw() +
     theme(
       strip.text = element_text(color = "white", size = 8),
@@ -155,16 +160,18 @@ for(var_ch in c("cen", "wynagrodzeń")){
       axis.title = element_text(color = "black", size = 7),
       legend.text = element_text(size = 7),
       legend.title = element_text(size = 8),
+      legend.position = "bottom",
       plot.title = element_text(size = 9),
       plot.title.position = "plot", 
       plot.caption = element_text(size = 7, color = "black"),
       plot.caption.position = "plot"
     ) +
     labs(
-      title = "Dekompozycja źródeł wariancji w symulowanych cenach energii i żywności", 
+      #title = "Dekompozycja źródeł wariancji w symulowanych cenach energii i żywności", 
       y = "Dynamika r/r", x = NULL, 
-      caption = "Roczna dynamika została otrzymana przez zannualizowaie kwartalnych dynamik.\nObliczenia zostały wykonane na danych odsezonowanych\nPrzerywanymi liniami oznaczono cel inflacyjny oraz cel wzrostu wynagrodzeń",
-      fill = "Egzogeniczne źródła zmian:"
+      #caption = "Roczna dynamika została otrzymana przez zannualizowaie kwartalnych dynamik.\nObliczenia zostały wykonane na danych odsezonowanych\nPrzerywanymi liniami oznaczono cel inflacyjny oraz cel wzrostu wynagrodzeń",
+      #fill = "Egzogeniczne źródła zmian:"
+      fill = NULL
     )
   
   ggsave(filename = paste0("var_decomp_", var_ch ,".png"), path = "charts", device = "png",
@@ -176,13 +183,9 @@ for(var_ch in c("cen", "wynagrodzeń")){
 # Create chart with each variable -----------------------------------------
 
 ## Get colors 
-colors_palette <- RColorBrewer::brewer.pal(n=6, name = "RdBu")
+colors_palette <- rev(RColorBrewer::brewer.pal(n=6, name = "RdBu"))
 
 decomposition_long_to_chart$exogenous %>% unique
-
-list_exogenous <- c("ceny energii", "ceny żywności", 
-                    "niedobory", "nadrabianie oczekiwań", 
-                    "wakaty", "warunki początkowe") 
 
 for(i in 1:6){
   for(var_ch in c("cen", "wynagrodzeń")){
@@ -192,12 +195,13 @@ for(i in 1:6){
     filter(exogenous %in% list_exogenous[1:i]) %>% 
     ggplot(aes(x=date, y=value)) +
     geom_col(aes(fill=exogenous)) +
-    scale_fill_manual(values = colors_palette[1:i]) +
+    scale_fill_manual(values = rev(colors_palette[1:i])) +
     facet_wrap(~variable, ncol=1) +
     scale_y_continuous(labels = scales::percent_format(), 
                        breaks = seq(-0.05, 0.15, 0.05),
                        limits = c(-0.05, 0.175),
                        expand = expansion(0)) +
+      guides(fill=guide_legend(nrow=2, ncol = 3, byrow=TRUE)) +
     theme_bw() +
       theme(
         strip.text = element_text(color = "white", size = 8),
@@ -206,16 +210,18 @@ for(i in 1:6){
         axis.title = element_text(color = "black", size = 7),
         legend.text = element_text(size = 7),
         legend.title = element_text(size = 8),
+        legend.position = "bottom",
         plot.title = element_text(size = 9),
         plot.title.position = "plot", 
         plot.caption = element_text(size = 7, color = "black"),
         plot.caption.position = "plot"
       ) +
     labs(
-      title = "Dekompozycja źródeł wariancji w symulowanych cenach energii i żywności", 
+      #title = "Dekompozycja źródeł wariancji w symulowanych cenach energii i żywności", 
       y = "Dynamika r/r", x = NULL, 
-      caption = "Roczna dynamika została otrzymana przez zannualizowaie kwartalnych dynamik.\nObliczenia zostały wykonane na danych odsezonowanych",
-      fill = "Egzogeniczne źródła zmian:"
+      #caption = "Roczna dynamika została otrzymana przez zannualizowaie kwartalnych dynamik.\nObliczenia zostały wykonane na danych odsezonowanych",
+      #fill = "Egzogeniczne źródła zmian:"
+      fill = NULL
     )
   
   ggsave(filename = paste0("var_decomp_no",i,".png"), path = paste0("charts/var_decomp_", var_ch), device = "png",
